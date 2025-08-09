@@ -131,6 +131,22 @@ function initializeDatabase() {
             )
         `);
         
+        // Backward-compatibility: ensure satisGecmisi has alisFiyati, toplam, borc columns
+        try {
+            const cols = db.prepare(`PRAGMA table_info(satisGecmisi)`).all().map(r => r.name);
+            if (!cols.includes('alisFiyati')) {
+                db.exec(`ALTER TABLE satisGecmisi ADD COLUMN alisFiyati REAL DEFAULT 0`);
+            }
+            if (!cols.includes('toplam')) {
+                db.exec(`ALTER TABLE satisGecmisi ADD COLUMN toplam REAL DEFAULT 0`);
+            }
+            if (!cols.includes('borc')) {
+                db.exec(`ALTER TABLE satisGecmisi ADD COLUMN borc INTEGER DEFAULT 0`);
+            }
+        } catch (e) {
+            console.warn('⚠️ satisGecmisi schema migration warning:', e.message);
+        }
+        
         db.exec(`
             CREATE TABLE IF NOT EXISTS borclarim (
                 id TEXT PRIMARY KEY,
@@ -4408,29 +4424,7 @@ app.post('/api/yedek-yukle-veriler-json', async (req, res) => {
 
 
 
-// Server startup
-server.listen(PORT, '0.0.0.0', () => {
-    console.log('🚀 StokV1 Server running on port', PORT);
-    console.log('📱 Local: http://localhost:' + PORT);
-    console.log('🌐 Network: http://0.0.0.0:' + PORT);
-    
-    // Network interfaces
-    const os = require('os');
-    const interfaces = os.networkInterfaces();
-    console.log('📡 Available network interfaces:');
-    Object.keys(interfaces).forEach(iface => {
-        interfaces[iface].forEach(details => {
-            if (details.family === 'IPv4' && !details.internal) {
-                console.log(`   ${iface}: http://${details.address}:${PORT}`);
-            }
-        });
-    });
-    
-    // Start scheduled backups
-    console.log('🔄 Günlük yedekleme başlatılıyor...');
-    setInterval(sendDailyBackup, 24 * 60 * 60 * 1000); // 24 saat
-    setInterval(sendDailyBackup, 6 * 60 * 60 * 1000); // 6 saat
-});
+// Server startup (removed duplicate)
 
 // Stok temizleme endpoint'i
 app.post('/api/stok-temizle', async (req, res) => {
@@ -4803,28 +4797,4 @@ app.post('/api/stok-yukle-veriler-json', async (req, res) => {
             error: 'Veriler.json stok yükleme hatası: ' + error.message 
         });
     }
-});
-
-// Server startup
-server.listen(PORT, '0.0.0.0', () => {
-    console.log('🚀 StokV1 Server running on port', PORT);
-    console.log('📱 Local: http://localhost:' + PORT);
-    console.log('🌐 Network: http://0.0.0.0:' + PORT);
-    
-    // Network interfaces
-    const os = require('os');
-    const interfaces = os.networkInterfaces();
-    console.log('📡 Available network interfaces:');
-    Object.keys(interfaces).forEach(iface => {
-        interfaces[iface].forEach(details => {
-            if (details.family === 'IPv4' && !details.internal) {
-                console.log(`   ${iface}: http://${details.address}:${PORT}`);
-            }
-        });
-    });
-    
-    // Start scheduled backups
-    console.log('🔄 Günlük yedekleme başlatılıyor...');
-    setInterval(sendDailyBackup, 24 * 60 * 60 * 1000); // 24 saat
-    setInterval(sendDailyBackup, 6 * 60 * 60 * 1000); // 6 saat
 });
