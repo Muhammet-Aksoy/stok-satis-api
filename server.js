@@ -131,6 +131,22 @@ function initializeDatabase() {
             )
         `);
         
+        // Backward-compatibility: ensure satisGecmisi has alisFiyati, toplam, borc columns
+        try {
+            const cols = db.prepare(`PRAGMA table_info(satisGecmisi)`).all().map(r => r.name);
+            if (!cols.includes('alisFiyati')) {
+                db.exec(`ALTER TABLE satisGecmisi ADD COLUMN alisFiyati REAL DEFAULT 0`);
+            }
+            if (!cols.includes('toplam')) {
+                db.exec(`ALTER TABLE satisGecmisi ADD COLUMN toplam REAL DEFAULT 0`);
+            }
+            if (!cols.includes('borc')) {
+                db.exec(`ALTER TABLE satisGecmisi ADD COLUMN borc INTEGER DEFAULT 0`);
+            }
+        } catch (e) {
+            console.warn('⚠️ satisGecmisi schema migration warning:', e.message);
+        }
+        
         db.exec(`
             CREATE TABLE IF NOT EXISTS borclarim (
                 id TEXT PRIMARY KEY,

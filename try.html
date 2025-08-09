@@ -1599,7 +1599,6 @@
             background: var(--danger);
             color: white;
         }
-        
         [data-theme="dark"] .notification.warning {
             background: var(--warning);
             color: white;
@@ -3571,7 +3570,6 @@
                 return false;
             }
         }
-        
         // Toplu senkronizasyon (sadece büyük operasyonlar için)
         async function topluSenkronizasyon() {
             try {
@@ -3713,14 +3711,19 @@
             
             if (salesArray && salesArray.length > 0) {
                 salesArray.forEach(satis => {
+                    const fiyat = parseFloat(satis.fiyat) || 0;
+                    const miktar = parseFloat(satis.miktar) || 0;
+                    const alis = parseFloat(satis.alisFiyati) || 0;
+                    const toplam = typeof satis.toplam === 'number' ? satis.toplam : (parseFloat(satis.toplam) || (fiyat * miktar));
+                    
                     if (satis.borc) {
-                        creditTotal += satis.toplam;
+                        creditTotal += toplam;
                     } else {
-                        cashTotal += satis.toplam;
+                        cashTotal += toplam;
                     }
                     
-                    if (satis.alisFiyati !== undefined && satis.fiyat !== undefined) {
-                        toplamKarZarar += (satis.fiyat - satis.alisFiyati) * satis.miktar;
+                    if (!isNaN(alis) && !isNaN(fiyat)) {
+                        toplamKarZarar += (fiyat - alis) * miktar;
                     }
                 });
             }
@@ -4364,7 +4367,6 @@
                 }
             });
         }
-        
         // Satışı tamamla
         async function tamamlaSatis(key, miktar, musteriId, aciklama, satisFiyati) {
             const urun = stokListesi[key];
@@ -5156,7 +5158,6 @@
                 Swal.fire('Başarılı', 'Düşük stoklu ürünler listesi panoya kopyalandı.', 'success');
             });
         }
-        
         // Aynı barkodlu ürünleri ara
         async function searchProductsByBarcode(barkod) {
             try {
@@ -5905,7 +5906,6 @@
                 }
             });
         }
-        
         // Müşteri detaylarını göster
         function showCustomerDetails(customerId) {
             const musteri = musteriler[customerId];
@@ -6678,7 +6678,6 @@
             
             editingDebtId = null;
         }
-        
         // Satış işlemleri - FIX: Eksik fonksiyonlar eklendi
         function satisDuzenle(satisId) {
             console.log('🔄 Satış düzenleme:', satisId);
@@ -7460,7 +7459,6 @@
             document.getElementById('musteriKaydetBtn').innerHTML = '<i class="fas fa-save"></i> Güncelle';
             document.getElementById('musteriIptalBtn').style.display = 'inline-block';
         }
-
         // Müşteri silme fonksiyonu (eksik olanı ekliyorum)
         async function musteriSil(id) {
             if (!musteriler[id]) return;
